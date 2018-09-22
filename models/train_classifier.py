@@ -40,12 +40,9 @@ def load_data(database_filepath):
 
     df = pd.read_sql_query(sql, engine)
 
-    #le.fit(df[df.columns.tolist()[3]])
 
-    X = df[[x for x in df.columns.tolist() if x not in ["id", "genre", "original"]]]
+    X = df.message
     Y = df[df.columns.tolist()[4:]]
-
-    #Y = le.transform(df[df.columns.tolist()[3]])
 
     '''
     ndf = df.groupby('genre').count()
@@ -75,7 +72,10 @@ def build_model():
         ('clf', ExtraTreesClassifier())
     ])
 
-    return(pipeline)
+    parameters = {'clf__n_estimators':[70, 120], 'clf__max_depth': [2, 4] }
+    cv = GridSearchCV(pipeline, parameters)
+
+    return(cv)
 
 
 
@@ -84,7 +84,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
     """"""
 
     print("Testing Performance")
-    print(classification_report(Y_test, pipeline.predict(X_test.message)))
+    print(classification_report(Y_test, model.predict(X_test.message)))
 
     #Todo cat names
 
@@ -107,11 +107,13 @@ def main():
         print('Training model...')
         model.fit(X_train, Y_train)
 
+        best_model = model.best_estimator_
+
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test, category_names)
+        evaluate_model(best_model, X_test, Y_test, category_names)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
-        save_model(model, model_filepath)
+        save_model(best_model, model_filepath)
 
         print('Trained model saved!')
 
