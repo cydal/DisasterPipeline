@@ -68,18 +68,30 @@ def tokenize(text):
 
 
 def build_model():
-    """"""
-    pass
+    """Build Machine Learning Model"""
+    pipeline = Pipeline([
+        ('vect', CountVectorizer(tokenizer=tokenize)),
+        ('tfidf', TfidfTransformer()),
+        ('clf', ExtraTreesClassifier())
+    ])
+
+    return(pipeline)
+
+
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
     """"""
-    pass
+
+    print("Testing Performance")
+    print(classification_report(Y_test, pipeline.predict(X_test.message)))
+
+    #Todo cat names
 
 
 def save_model(model, model_filepath):
-    """Outputs sql database after cleaning and merging two csv files"""
-    pass
+    """Saves model passed in to specified filepath"""
+    joblib.dump(model, model_filepath)
 
 
 def main():
