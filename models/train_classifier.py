@@ -40,7 +40,7 @@ def load_data(database_filepath):
 
     df = pd.read_sql_query(sql, engine)
 
-    le.fit(df[df.columns.tolist()[3]])
+    #le.fit(df[df.columns.tolist()[3]])
 
     X = df[[x for x in df.columns.tolist() if x not in ["id", "genre", "original"]]]
     Y = df[df.columns.tolist()[4:]]

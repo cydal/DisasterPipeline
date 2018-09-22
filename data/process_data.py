@@ -32,6 +32,12 @@ def clean_data(df):
     # Drop first part of categories and convert to int
     for col in cols:
         category[col] = pd.to_numeric(category[col].str.split("-").str[1])
+        #Ensure categories are 0 or 1
+        category[col][category[col] > 1] = 1
+
+
+
+
 
     newdf = pd.concat([df, category], axis=1)
     newdf = newdf.drop(["categories"], axis=1)
