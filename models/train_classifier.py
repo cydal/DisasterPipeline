@@ -4,12 +4,14 @@ import numpy as np
 from sqlalchemy import create_engine
 
 import nltk
-nltk.download('punkt')
+
 
 from nltk.tokenize import word_tokenize, sent_tokenize
 nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('punkt')
 
-
+from nltk.stem import WordNetLemmatizer
 from nltk.stem.porter import PorterStemmer
 from sklearn import preprocessing
 
@@ -19,9 +21,10 @@ from nltk.corpus import stopwords
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.naive_bayes import GaussianNB
+
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 
 from sklearn.model_selection import GridSearchCV
@@ -33,7 +36,19 @@ import sys
 
 
 def load_data(database_filepath):
-    """Load dataframe from sql db"""
+    """Load dataframe from sql db
+
+
+    Parameters:
+    database_filepath (string): Path to database file to export
+
+    Returns:
+    X (Dataframe): Feature Vector
+    Y (Dataframe): Target Vector
+    category_names (List): List of strings for column names for categories
+
+
+    """
     # load data from database
     engine = create_engine('sqlite:///' + database_filepath)
     sql =  "SELECT * FROM message"
@@ -55,26 +70,42 @@ def load_data(database_filepath):
 
 def tokenize(text):
     """Function returns after performing preprocessing steps on text including
-    tolower, tokenization, stopwords removal and stemming"""
+    tolower, tokenization, stopwords removal and lemmatize
+
+    Parameters:
+    text (string): Refers to individual words passed in
+
+    Returns:
+    stemmed(string): Returns text with operations performed.
+
+
+    """
     text = text.lower()
     text = re.sub(r"[^a-zA-Z0-9]", " ", text)
     words = word_tokenize(text)
     words = [w for w in words if w not in stopwords.words("english")]
-    stemmed = [PorterStemmer().stem(w) for w in words]
+    stemmed = [WordNetLemmatizer().lemmatize(w) for w in words]
     return(stemmed)
 
 
 def build_model():
-    """Build Machine Learning Model"""
+    """Build Machine Learning Model
+
+    Returns (model): Pipeline and gridsearch model
+    """
+
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', ExtraTreesClassifier())
+        ('clf', MultiOutputClassifier(DecisionTreeClassifier()))
     ])
 
-    parameters = {'clf__n_estimators':[70, 120], 'clf__max_depth': [2, 4]}
-    #parameters = {'clf__n_estimators':[10]}
-    cv = GridSearchCV(pipeline, parameters, n_jobs=-1)
+    
+    parameters = {'clf__estimator__min_samples_split':[2, 4, 6],
+                  'clf__estimator__max_depth': [2, 4]}
+
+    #parameters = {'clf__estimator__min_samples_split':[2]}
+    cv = GridSearchCV(pipeline, parameters)
 
     return(cv)
 
@@ -82,7 +113,14 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    """"""
+    """
+    Function returns the performance of test set for each category_names
+
+    model (model): Model passed in for prediction
+    X_test (dataframe): Test set input features to predict on
+    Y_test (dataframe): Ground truth target values
+    category_names (List): String list of target category names
+    """
 
     print("Testing Performance")
     print(classification_report(Y_test, model.predict(X_test), target_names=category_names))
@@ -91,7 +129,10 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
-    """Saves model passed in to specified filepath"""
+    """Saves model passed in to specified filepath
+    model (model): Model to save
+    model_filepath (string): Location to save model
+    """
     joblib.dump(model, model_filepath)
 
 

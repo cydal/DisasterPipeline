@@ -27,12 +27,20 @@ app = Flask(__name__)
 
 def tokenize(text):
     """Function returns after performing preprocessing steps on text including
-    tolower, tokenization, stopwords removal and stemming"""
+    tolower, tokenization, stopwords removal and stemming
+
+    Parameters:
+    text (string): Refers to individual words passed in
+
+    Returns:
+    stemmed(string): Returns text with operations performed.
+
+    """
     text = text.lower()
     text = re.sub(r"[^a-zA-Z0-9]", " ", text)
     words = word_tokenize(text)
     words = [w for w in words if w not in stopwords.words("english")]
-    stemmed = [PorterStemmer().stem(w) for w in words]
+    stemmed = [WordNetLemmatizer().lemmatize(w) for w in words]
     return(stemmed)
 
 
