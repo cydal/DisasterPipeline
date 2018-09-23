@@ -72,8 +72,9 @@ def build_model():
         ('clf', ExtraTreesClassifier())
     ])
 
-    parameters = {'clf__n_estimators':[70, 120], 'clf__max_depth': [2, 4] }
-    cv = GridSearchCV(pipeline, parameters)
+    #parameters = {'clf__n_estimators':[70, 120], 'clf__max_depth': [2, 4] }
+    parameters = {'clf__n_estimators':[10]}
+    cv = GridSearchCV(pipeline, parameters, n_jobs=-1)
 
     return(cv)
 
@@ -84,7 +85,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
     """"""
 
     print("Testing Performance")
-    print(classification_report(Y_test, model.predict(X_test.message)))
+    print(classification_report(Y_test, model.predict(X_test), target_names=category_names))
 
     #Todo cat names
 
