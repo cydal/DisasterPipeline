@@ -72,8 +72,8 @@ def build_model():
         ('clf', ExtraTreesClassifier())
     ])
 
-    #parameters = {'clf__n_estimators':[70, 120], 'clf__max_depth': [2, 4] }
-    parameters = {'clf__n_estimators':[10]}
+    parameters = {'clf__n_estimators':[70, 120], 'clf__max_depth': [2, 4]}
+    #parameters = {'clf__n_estimators':[10]}
     cv = GridSearchCV(pipeline, parameters, n_jobs=-1)
 
     return(cv)
